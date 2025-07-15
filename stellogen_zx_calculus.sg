@@ -1,0 +1,283 @@
+'''
+ZX-Calculus Implementation in Stellogen
+Graphical quantum computation with string diagrams
+'''
+
+' ZX-Calculus Foundation
+' Spiders are the basic building blocks
+(:= (zx-spider Color Arity Phase) {
+  [(+z-spider N Phase) (== Color z) (== Arity N)]
+  [(+x-spider N Phase) (== Color x) (== Arity N)]
+  [(+hadamard) (== Color h) (== Arity 2)]
+  [(+wire) (== Color identity) (== Arity 2)]
+})
+
+' ZX-Diagram Structure
+(:= (zx-diagram Components Connections) {
+  [(+spider-component Id Color Arity Phase) 
+   (== Component (spider Id Color Arity Phase))]
+  [(+connection From To) (== Wire (connect From To))]
+  [(+boundary-input Input) (== Input (input-boundary Input))]
+  [(+boundary-output Output) (== Output (output-boundary Output))]
+})
+
+' ZX-Calculus Rewrite Rules
+(:= (zx-rewrite-rules) {
+  ' Spider fusion: same color spiders fuse
+  [(+spider-fusion S1 S2 Result)
+   (== S1 (z-spider N1 Phase1))
+   (== S2 (z-spider N2 Phase2))
+   (== Result (z-spider (+ N1 N2 -2) (+ Phase1 Phase2)))]
+  
+  ' Color change via Hadamard
+  [(+color-change Diagram1 Diagram2)
+   (== Diagram1 (sequence (h-spider) (z-spider 2 Phase) (h-spider)))
+   (== Diagram2 (x-spider 2 Phase))]
+  
+  ' π-commutation rule
+  [(+pi-commutation D1 D2)
+   (== D1 (sequence (z-spider 2 pi) (x-spider 2 Alpha)))
+   (== D2 (sequence (x-spider 2 Alpha) (z-spider 2 pi)))]
+  
+  ' Copy rule (bialgebra)
+  [(+copy-rule Input Output1 Output2)
+   (== Copy (z-spider 3 0))
+   (== (apply Copy Input) (tensor Output1 Output2))]
+  
+  ' Identity removal
+  [(+identity-removal Wire)
+   (== Wire (z-spider 2 0))
+   (== Wire (x-spider 2 0))
+   (== Wire identity)]
+})
+
+' ZX-Diagram Composition
+(:= (zx-composition) {
+  [(+sequential-composition D1 D2) (== Result (sequence D1 D2))]
+  [(+parallel-composition D1 D2) (== Result (parallel D1 D2))]
+  [(+diagram-equality D1 D2) (== (normalize D1) (normalize D2))]
+})
+
+' Quantum Gates as ZX-Diagrams
+(:= (quantum-gates-zx) {
+  ' Pauli gates
+  [(+pauli-x) (== ZX (x-spider 2 pi))]
+  [(+pauli-y) (== ZX (sequence (z-spider 2 pi) (x-spider 2 pi)))]
+  [(+pauli-z) (== ZX (z-spider 2 pi))]
+  
+  ' Rotation gates
+  [(+rz-gate Angle) (== ZX (z-spider 2 Angle))]
+  [(+rx-gate Angle) (== ZX (x-spider 2 Angle))]
+  [(+ry-gate Angle) (== ZX (sequence 
+    (h-spider) (z-spider 2 Angle) (h-spider)))]
+  
+  ' Hadamard gate
+  [(+hadamard-gate) (== ZX (h-spider))]
+  
+  ' CNOT gate
+  [(+cnot-gate) (== ZX (cnot-zx-diagram))]
+})
+
+' CNOT as ZX-diagram (specific construction)
+(:= cnot-zx-diagram {
+  [(+cnot-structure Control Target) (== CNOT
+    (zx-diagram
+      (components
+        (z-spider control-spider 3 0)
+        (x-spider target-spider 3 0))
+      (connections
+        (connect input-1 control-spider)
+        (connect control-spider target-spider)
+        (connect control-spider output-1)
+        (connect input-2 target-spider)
+        (connect target-spider output-2))))]
+})
+
+' ZX-Diagram Normalization
+(:= (zx-normalization) {
+  [(+normal-form Diagram) (== Normal
+    (apply-rewrites-until-stable Diagram))]
+  
+  [(+spider-normal-form) (== Normal
+    (merge-adjacent-spiders
+      (remove-identities
+        (apply-bialgebra-rules Diagram))))]
+  
+  [(+diagram-simplification D1 D2) (== D2
+    (apply-rewrite-rules D1))]
+})
+
+' Bridge: Operads to ZX-Calculus
+(:= (operad-to-zx Bridge) {
+  [(+operadic-operation Op) (== ZX (operation-to-diagram Op))]
+  [(+operadic-composition Op1 Op2) (== ZX 
+    (sequential-composition 
+      (operation-to-diagram Op1)
+      (operation-to-diagram Op2)))]
+  
+  [(+operadic-tensor Op1 Op2) (== ZX
+    (parallel-composition
+      (operation-to-diagram Op1)
+      (operation-to-diagram Op2)))]
+  
+  [(+operadic-symmetry Perm Op) (== ZX
+    (apply-permutation-diagram Perm (operation-to-diagram Op)))]
+})
+
+' Bridge: ZX-Calculus to Operads
+(:= (zx-to-operad Bridge) {
+  [(+zx-diagram-to-operad Diagram) (== Operad
+    (diagram-to-operation Diagram))]
+  
+  [(+spider-to-operation Spider) (== Operation
+    (match Spider
+      ((z-spider N Phase) (z-operation N Phase))
+      ((x-spider N Phase) (x-operation N Phase))
+      ((h-spider) (hadamard-operation))))]
+  
+  [(+diagram-composition-to-operad D1 D2) (== Operad
+    (operadic-composition
+      (diagram-to-operation D1)
+      (diagram-to-operation D2)))]
+})
+
+' Quantum Circuit Compilation via ZX
+(:= (circuit-compilation) {
+  [(+circuit-to-zx Circuit) (== ZX
+    (fold-sequential-composition
+      (map gate-to-zx-diagram Circuit)))]
+  
+  [(+zx-optimization Diagram) (== Optimized
+    (apply-rewrite-rules
+      (spider-fusion
+        (identity-removal Diagram))))]
+  
+  [(+zx-to-circuit Diagram) (== Circuit
+    (extract-gate-sequence
+      (normal-form Diagram)))]
+})
+
+' Quantum Algorithms in ZX-Calculus
+(:= (quantum-algorithms-zx) {
+  ' Grover iteration as ZX-diagram
+  [(+grover-iteration-zx N) (== ZX
+    (sequential-composition
+      (oracle-zx N)
+      (diffusion-zx N)))]
+  
+  ' QFT as ZX-diagram
+  [(+qft-zx N) (== ZX
+    (fold-sequential-composition
+      (append 
+        (map hadamard-layer (range 0 N))
+        (map rotation-layer (range 0 N))
+        (bit-reversal-zx N))))]
+  
+  ' Quantum phase estimation
+  [(+qpe-zx Unitary) (== ZX
+    (sequential-composition
+      (qft-inverse-zx)
+      (controlled-unitaries-zx Unitary)
+      (qft-zx)))]
+})
+
+' ZX-Calculus for Quantum Error Correction
+(:= (qec-zx) {
+  [(+stabilizer-zx Code) (== ZX
+    (parallel-composition
+      (map stabilizer-to-zx (generators Code))))]
+  
+  [(+syndrome-extraction-zx Code) (== ZX
+    (sequential-composition
+      (stabilizer-measurements-zx Code)
+      (classical-processing-zx)))]
+  
+  [(+error-correction-zx Syndrome) (== ZX
+    (conditional-correction-zx Syndrome))]
+})
+
+' Advanced ZX-Calculus Features
+(:= (advanced-zx) {
+  ' Mixed states via discarding
+  [(+mixed-state-zx Density) (== ZX
+    (trace-out-environment Density))]
+  
+  ' Measurement in ZX
+  [(+measurement-zx Basis) (== ZX
+    (measurement-spider Basis))]
+  
+  ' Classical control
+  [(+classical-control-zx Condition Operation) (== ZX
+    (conditional-zx Condition Operation))]
+  
+  ' Higher-dimensional systems (qudits)
+  [(+qudit-zx Dimension) (== ZX
+    (generalized-spider Dimension))]
+})
+
+' Equivalence Testing
+(:= (equivalence-testing) {
+  [(+diagram-equivalence D1 D2) (== Equivalent
+    (equal? (normal-form D1) (normal-form D2)))]
+  
+  [(+operadic-zx-equivalence Op ZX) (== Equivalent
+    (equal? 
+      (normal-form (operation-to-diagram Op))
+      (normal-form ZX)))]
+})
+
+' Example: Bell State in both formalisms
+(:= bell-state-example {
+  ' Operadic version
+  [(+bell-operadic) (== Bell
+    (operadic-composition
+      (hadamard-operation 0)
+      (cnot-operation 0 1)))]
+  
+  ' ZX-calculus version
+  [(+bell-zx) (== Bell
+    (sequential-composition
+      (h-spider)
+      (cnot-zx-diagram)))]
+  
+  ' Bridge verification
+  [(+verify-equivalence) (== Verified
+    (equal?
+      (operation-to-diagram bell-operadic)
+      (normal-form bell-zx)))]
+})
+
+' Test the bridge between operads and ZX-calculus
+<show exec {
+  @(verify-equivalence)
+  @bell-state-example
+  @operad-to-zx
+  @zx-to-operad
+  @zx-rewrite-rules
+  @quantum-gates-zx
+}>
+
+' Comprehensive quantum computation example
+(:= comprehensive-example {
+  [(+quantum-algorithm Input) (== Output
+    (sequential-composition
+      (state-preparation Input)
+      (grover-iteration-zx 4)
+      (measurement-zx computational-basis)))]
+  
+  [(+verify-operadic-equivalence) (== Verified
+    (equal?
+      (diagram-to-operation (quantum-algorithm Input))
+      (operadic-composition
+        (state-prep-operad Input)
+        (grover-operad 4)
+        (measurement-operad))))]
+})
+
+<show exec {
+  @(verify-operadic-equivalence)
+  @comprehensive-example
+  @operad-to-zx
+  @zx-to-operad
+  @quantum-algorithms-zx
+}>
