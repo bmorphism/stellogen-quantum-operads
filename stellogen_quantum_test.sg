@@ -1,0 +1,320 @@
+'''
+Quantum Operads and ZX-Calculus Test Suite in Stellogen
+Comprehensive testing of both formalisms and their equivalences
+'''
+
+' Test Framework Foundation
+(:= (test-framework) {
+  [(+assert-equal Expected Actual) (== Result
+    (if (equal? Expected Actual) pass fail))]
+  [(+assert-true Condition) (== Result
+    (if Condition pass fail))]
+  [(+test-group Name Tests) (== Group
+    (test-suite Name Tests))]
+})
+
+' Quantum Operads Tests
+(:= (operad-tests) {
+  [(+test-operad-identity) (== Test
+    (assert-equal
+      (some-operation)
+      (compose-ops (some-operation) (unit-operation))))]
+  
+  [(+test-operad-associativity) (== Test
+    (assert-equal
+      (compose-ops (op1) (compose-ops (op2) (op3)))
+      (compose-ops (compose-ops (op1) (op2)) (op3))))]
+  
+  [(+test-spider-fusion) (== Test
+    (assert-equal
+      (compose-ops (z-spider 2 (pi/4)) (z-spider 2 (pi/4)))
+      (z-spider 2 (pi/2))))]
+  
+  [(+test-symmetric-action) (== Test
+    (assert-equal
+      (apply-permutation (swap 0 1) (cnot 0 1))
+      (cnot 1 0)))]
+})
+
+' ZX-Calculus Tests
+(:= (zx-tests) {
+  [(+test-spider-fusion-zx) (== Test
+    (assert-equal
+      (fuse-spiders (z-spider 2 (pi/4)) (z-spider 2 (pi/4)))
+      (z-spider 2 (pi/2))))]
+  
+  [(+test-color-change) (== Test
+    (assert-equal
+      (sequence (h-spider) (z-spider 2 (pi/4)) (h-spider))
+      (x-spider 2 (pi/4))))]
+  
+  [(+test-pi-commutation) (== Test
+    (assert-equal
+      (sequence (z-spider 2 pi) (x-spider 2 (pi/4)))
+      (sequence (x-spider 2 (pi/4)) (z-spider 2 pi))))]
+  
+  [(+test-copy-rule) (== Test
+    (assert-true
+      (is-copy-spider (z-spider 3 0))))]
+})
+
+' Bridge Tests (Operads ↔ ZX-Calculus)
+(:= (bridge-tests) {
+  [(+test-operad-to-zx-identity) (== Test
+    (assert-equal
+      (operation-to-diagram (identity-operation))
+      (identity-wire)))]
+  
+  [(+test-zx-to-operad-identity) (== Test
+    (assert-equal
+      (diagram-to-operation (identity-wire))
+      (identity-operation)))]
+  
+  [(+test-round-trip-preservation) (== Test
+    (let ((original-op (cnot-operation)))
+      (assert-equal
+        original-op
+        (diagram-to-operation
+          (operation-to-diagram original-op)))))]
+  
+  [(+test-composition-preservation) (== Test
+    (let ((op1 (hadamard-operation))
+          (op2 (pauli-x-operation)))
+      (assert-equal
+        (operation-to-diagram (compose-ops op1 op2))
+        (sequential-composition
+          (operation-to-diagram op1)
+          (operation-to-diagram op2)))))]
+})
+
+' Quantum Algorithm Tests
+(:= (algorithm-tests) {
+  [(+test-bell-state-prep) (== Test
+    (let ((bell-op (compose-ops (hadamard-operation 0) (cnot-operation 0 1)))
+          (bell-zx (sequential-composition (h-spider) (cnot-zx-diagram))))
+      (assert-equal
+        (operation-to-diagram bell-op)
+        (normal-form bell-zx))))]
+  
+  [(+test-grover-iteration) (== Test
+    (let ((grover-op (compose-ops (oracle-operation) (diffusion-operation)))
+          (grover-zx (sequential-composition (oracle-zx) (diffusion-zx))))
+      (assert-equal
+        (operation-to-diagram grover-op)
+        (normal-form grover-zx))))]
+  
+  [(+test-qft-equivalence) (== Test
+    (let ((qft-op (qft-operation 3))
+          (qft-zx (qft-zx-diagram 3)))
+      (assert-equal
+        (operation-to-diagram qft-op)
+        (normal-form qft-zx))))]
+})
+
+' Performance Tests
+(:= (performance-tests) {
+  [(+test-large-circuit-compilation) (== Test
+    (let ((large-circuit (random-circuit 100)))
+      (assert-true
+        (< (compilation-time large-circuit) (time-threshold)))))]
+  
+  [(+test-memory-usage) (== Test
+    (let ((complex-diagram (complex-zx-diagram)))
+      (assert-true
+        (< (memory-usage complex-diagram) (memory-threshold)))))]
+  
+  [(+test-parallel-speedup) (== Test
+    (let ((serial-time (time-sequential-rewrite large-diagram))
+          (parallel-time (time-parallel-rewrite large-diagram)))
+      (assert-true
+        (< parallel-time (* 0.8 serial-time)))))]
+})
+
+' Quantum Error Correction Tests
+(:= (qec-tests) {
+  [(+test-syndrome-extraction) (== Test
+    (let ((code (seven-qubit-code))
+          (error (single-qubit-error)))
+      (assert-equal
+        (extract-syndrome code error)
+        (expected-syndrome error))))]
+  
+  [(+test-error-correction) (== Test
+    (let ((code (surface-code))
+          (errors (random-errors)))
+      (assert-true
+        (all-correctable? code errors))))]
+  
+  [(+test-logical-operations) (== Test
+    (let ((code (color-code))
+          (logical-op (logical-pauli-x)))
+      (assert-equal
+        (apply-logical-op code logical-op)
+        (expected-logical-result))))]
+})
+
+' Condensed Sets Alignment Tests
+(:= (condensed-alignment-tests) {
+  [(+test-sheaf-property) (== Test
+    (let ((local-ops (local-operations))
+          (global-op (glue-operations local-ops)))
+      (assert-equal
+        (operadic-sheaf-condition local-ops)
+        global-op)))]
+  
+  [(+test-topological-invariance) (== Test
+    (let ((diagram1 (zx-diagram-1))
+          (diagram2 (topologically-equivalent-diagram diagram1)))
+      (assert-equal
+        (semantic-interpretation diagram1)
+        (semantic-interpretation diagram2))))]
+  
+  [(+test-categorical-structure) (== Test
+    (assert-true
+      (is-abelian-category quantum-operad-category)))]
+})
+
+' Integration Tests
+(:= (integration-tests) {
+  [(+test-full-quantum-compilation) (== Test
+    (let ((high-level-algorithm (quantum-algorithm)))
+      (assert-equal
+        (compile-and-optimize high-level-algorithm)
+        (expected-optimized-circuit))))]
+  
+  [(+test-simulation-equivalence) (== Test
+    (let ((operadic-result (simulate-operadic algorithm))
+          (zx-result (simulate-zx algorithm)))
+      (assert-equal operadic-result zx-result)))]
+  
+  [(+test-hardware-compilation) (== Test
+    (let ((abstract-circuit (abstract-quantum-circuit))
+          (hardware-circuit (compile-to-hardware abstract-circuit)))
+      (assert-true
+        (functionally-equivalent? abstract-circuit hardware-circuit))))]
+})
+
+' Comprehensive Test Suite
+(:= (comprehensive-test-suite) {
+  [(+run-all-tests) (== Results
+    (test-group "Quantum Operads and ZX-Calculus Tests" {
+      (test-group "Operad Tests" (operad-tests))
+      (test-group "ZX-Calculus Tests" (zx-tests))
+      (test-group "Bridge Tests" (bridge-tests))
+      (test-group "Algorithm Tests" (algorithm-tests))
+      (test-group "Performance Tests" (performance-tests))
+      (test-group "QEC Tests" (qec-tests))
+      (test-group "Condensed Alignment Tests" (condensed-alignment-tests))
+      (test-group "Integration Tests" (integration-tests))
+    }))]
+})
+
+' Property-Based Testing
+(:= (property-tests) {
+  [(+property-operad-laws) (== Property
+    (forall (op1 op2 op3)
+      (and
+        (equal? (compose-ops op1 (unit-operation)) op1)
+        (equal? (compose-ops (compose-ops op1 op2) op3)
+                (compose-ops op1 (compose-ops op2 op3))))))]
+  
+  [(+property-zx-normalization) (== Property
+    (forall (diagram)
+      (equal? (normal-form (normal-form diagram))
+              (normal-form diagram))))]
+  
+  [(+property-bridge-isomorphism) (== Property
+    (forall (operation)
+      (equal? operation
+              (diagram-to-operation
+                (operation-to-diagram operation)))))]
+})
+
+' Test Execution and Reporting
+(:= (test-execution) {
+  [(+execute-test-suite) (== Execution
+    (let ((results (run-all-tests)))
+      (generate-test-report results)))]
+  
+  [(+test-report Results) (== Report
+    (format-test-results
+      (count-passed Results)
+      (count-failed Results)
+      (detailed-failures Results)))]
+  
+  [(+continuous-testing) (== CI
+    (on-code-change
+      (lambda () (execute-test-suite))))]
+})
+
+' Mock Data for Testing
+(:= (test-data) {
+  [(+sample-quantum-circuit) (== Circuit
+    (list
+      (hadamard-gate 0)
+      (cnot-gate 0 1)
+      (rz-gate (pi/4) 1)
+      (measure-gate 0)
+      (measure-gate 1)))]
+  
+  [(+sample-zx-diagram) (== Diagram
+    (zx-diagram
+      (list (h-spider) (cnot-pattern) (z-spider 2 (pi/4)))
+      (connections)))]
+  
+  [(+expected-results) (== Results
+    (hash-table
+      (bell-state-prep (tensor (plus-state) (plus-state)))
+      (grover-2-qubit (amplify-marked-state))
+      (qft-3-qubit (fourier-transformed-state))))]
+})
+
+' Run the comprehensive test suite
+<show exec {
+  @(execute-test-suite)
+  @comprehensive-test-suite
+  @property-tests
+  @test-execution
+  @test-data
+}>
+
+' Quick smoke test
+(:= (smoke-test) {
+  [(+basic-functionality-test) (== Test
+    (and
+      (test-operad-identity)
+      (test-spider-fusion-zx)
+      (test-round-trip-preservation)
+      (test-bell-state-prep)))]
+})
+
+<show exec {
+  @(basic-functionality-test)
+  @smoke-test
+  @bridge-tests
+  @algorithm-tests
+}>
+
+' Benchmarking Tests
+(:= (benchmark-tests) {
+  [(+benchmark-operadic-vs-zx) (== Benchmark
+    (compare-performance
+      (time-operadic-computation large-problem)
+      (time-zx-computation large-problem)))]
+  
+  [(+benchmark-optimization-levels) (== Benchmark
+    (compare-performance
+      (time-unoptimized-computation problem)
+      (time-optimized-computation problem)))]
+  
+  [(+memory-benchmark) (== Benchmark
+    (compare-memory-usage
+      (operadic-memory-usage problem)
+      (zx-memory-usage problem)))]
+})
+
+<show exec {
+  @(benchmark-operadic-vs-zx)
+  @benchmark-tests
+  @performance-tests
+}>
